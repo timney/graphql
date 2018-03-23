@@ -4,30 +4,25 @@ const {
 	GraphQLObjectType,
 	GraphQLString,
 	GraphQLInt,
-	GraphQLList
+	GraphQLList,
   } = require('graphql');
 const _ = require('lodash');
+const Guid = require('guid')
 
 
 var UserType = new GraphQLObjectType({
 	name: 'User',
 	description: '...',
 	fields: {
+		id: {
+			type: GraphQLString
+		},
 		name: {
 			type: GraphQLString,
-			resolve: (d) => {
-				return d.first_name + ' ' + d.last_name
-			}
 		},
-		email: {
-			type: GraphQLString
+		age: {
+			type: GraphQLInt
 		},
-		gender: {
-			type: GraphQLString
-		},
-		ip_address: {
-			type: GraphQLString
-		}
 	}
 })
 
@@ -40,12 +35,34 @@ var schema = new GraphQLSchema({
 				args: {
 					id: { type: GraphQLInt }
 				},
-				resolve: (root, args, context) => _.find(context.userData, { "id": args.id })
+				resolve: (root, args, context) => context.dataClient.getById(args.id).then(d => d.Item)
 			},
 			users: {
 				type: new GraphQLList(UserType),
-				resolve: (root, args, context) => context.userData
+				resolve: (root, args, context) => context.dataClient.getAll().then(d => d.Items)
 			}
+		}
+	}),
+	mutation: new GraphQLObjectType({
+		name: 'Mutation',
+		fields: {
+		  addUser: {
+			type: UserType,
+			args: {
+			  name: {
+				type: GraphQLString				
+			  },
+			  age: {
+				  type: GraphQLInt
+			  }
+			},
+			resolve: (root, {name, age}, context, fieldASTs) => {
+				const id = Guid.raw()
+				return context.dataClient.put({ name, age, id })
+					.then(d => ({id, name, age}))
+					.catch(e => e)
+			}
+		  }
 		}
 	})
 });

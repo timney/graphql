@@ -2,7 +2,9 @@ var restify = require('restify');
 const graphqlHTTP = require('express-graphql');
 
 var schema = require('./schema');
-const userData = require('./MOCK_DATA.json');
+//const userData = require('./MOCK_DATA.json');
+const dataClient = require('./data/client')
+
 
 const server = restify.createServer({
   name: 'at-graphql',
@@ -17,7 +19,7 @@ const graphqlConfig = {
     schema: schema,
     graphiql: true,
     context: {
-        userData: userData
+        dataClient: dataClient
     }
 };
 
